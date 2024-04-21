@@ -17,7 +17,17 @@ builder.Services.AddDbContext<DatabaseContext>(o => o.UseSqlServer(builder.Confi
 var autoMapper = new MapperConfiguration(item => item.AddProfile(new AutoMapperHandler()));
 IMapper mapper = autoMapper.CreateMapper();
 builder.Services.AddSingleton(mapper);
-
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(
+                      policy =>
+                      {
+                          policy.WithOrigins("http://example.com",
+                                             "http://www.contoso.com")
+                                             .AllowAnyMethod()
+                                             .AllowAnyHeader();
+                      });
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -30,6 +40,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseCors();
 
 app.MapControllers();
 
