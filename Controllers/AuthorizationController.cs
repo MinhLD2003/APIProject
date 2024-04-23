@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Project.API.DTO;
 using Project.API.Helper;
+using Project.API.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -17,12 +18,14 @@ namespace Project.API.Controllers
     {
         private readonly DatabaseContext _dbContext;
         private readonly JWTSettings _jwtSettings;
-        public AuthorizationController(DatabaseContext dbContext, IOptions<JWTSettings> options)
+        private readonly IRefreshTokenHandler _refreshTokenHandler;
+        public AuthorizationController(DatabaseContext dbContext, IOptions<JWTSettings> options, IRefreshTokenHandler _refreshTokenHandler)
         {
             _dbContext = dbContext;
             _jwtSettings = options.Value;
+            this._refreshTokenHandler = _refreshTokenHandler;
         }
-        [HttpPost("/generate-key")]
+        [HttpPost("/generate-access-token")]
         public async Task<IActionResult> GenerateToken([FromBody] UserDTO userDTO)
         {
 
@@ -45,12 +48,28 @@ namespace Project.API.Controllers
                 };
                 var token = tokenHandler.CreateToken(tokenDescriptor);
                 var finalToken = tokenHandler.WriteToken(token);
-                return Ok(finalToken);
+                return Ok( new TokenResponse() { 
+                    Token = finalToken, 
+                    RefreshToken = await this._refreshTokenHandler.GenerateRefresheToken(userDTO), 
+                    UserRole = user.Role 
+                });
 
             }
             else
             {
                 return Unauthorized();
+            }
+            return Ok("");
+        }
+        [HttpPost("/generate-refresh-token")]
+        public async Task<IActionResult> GenerateRefreshToken([FromBody] TokenResponse tokenResponse)
+        {
+            var _refreshToken = await this._dbContext.TblRefreshtokens.FirstOrDefaultAsync(token => token.RefreshToken == tokenResponse.RefreshToken);
+            if(_refreshToken != null)
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var tokenKey = Encoding.UTF8.GetBytes(tokenResponse.RefreshToken);
+
             }
             return Ok("");
         }
