@@ -1,0 +1,1 @@
+Pet project for practicing with API and JWT Authentication
