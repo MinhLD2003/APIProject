@@ -10,4 +10,6 @@ public partial class TblProduct
     public string? Name { get; set; }
 
     public decimal? Amount { get; set; }
+
+    public virtual ICollection<TblProductImage> TblProductImages { get; set; } = new List<TblProductImage>();
 }

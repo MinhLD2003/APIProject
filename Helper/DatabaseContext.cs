@@ -29,6 +29,8 @@ public partial class DatabaseContext : DbContext
 
     public virtual DbSet<TblProduct> TblProducts { get; set; }
 
+    public virtual DbSet<TblProductImage> TblProductImages { get; set; }
+
     public virtual DbSet<TblRefreshtoken> TblRefreshtokens { get; set; }
 
     public virtual DbSet<TblRole> TblRoles { get; set; }
@@ -137,6 +139,25 @@ public partial class DatabaseContext : DbContext
                 .IsUnicode(false);
         });
 
+        modelBuilder.Entity<TblProductImage>(entity =>
+        {
+            entity.HasKey(e => e.ImageId).HasName("PK__tbl_prod__DC9AC95538B503EA");
+
+            entity.ToTable("tbl_product_images");
+
+            entity.Property(e => e.ImageId)
+                .ValueGeneratedNever()
+                .HasColumnName("image_id");
+            entity.Property(e => e.ProductCode).HasColumnName("product_code");
+            entity.Property(e => e.ProductImage)
+                .HasColumnType("image")
+                .HasColumnName("product_image");
+
+            entity.HasOne(d => d.ProductCodeNavigation).WithMany(p => p.TblProductImages)
+                .HasForeignKey(d => d.ProductCode)
+                .HasConstraintName("FK__tbl_produ__produ__5CD6CB2B");
+        });
+
         modelBuilder.Entity<TblRefreshtoken>(entity =>
         {
             entity.HasKey(e => e.UserId);
@@ -193,11 +214,6 @@ public partial class DatabaseContext : DbContext
         });
 
         OnModelCreatingPartial(modelBuilder);
-    }
-
-    internal async Task FindAsync(int id)
-    {
-        throw new NotImplementedException();
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
